@@ -1,5 +1,8 @@
 extern crate image;
+extern crate nalgebra;
 extern crate piston_window;
+
+mod tinyraytracer;
 
 use image::{Rgba, RgbaImage};
 use piston_window::EventLoop;
@@ -17,6 +20,8 @@ fn main() {
             img.put_pixel(x, y, Rgba([r, g, 0, 255]));
         }
     }
+
+    image::imageops::flip_vertical_in_place(&mut img);
 
     let mut window: piston_window::PistonWindow =
         piston_window::WindowSettings::new("tinyraytracer_rs", [WIDTH, HEIGHT])
