@@ -22,7 +22,7 @@ trait TraceObj {
     fn ray_intersect(&self, ray: Ray) -> bool;
 }
 
-impl Sphere {
+impl TraceObj for Sphere {
     fn ray_intersect(&self, ray: Ray) -> Option<f32> {
         // Vector from ray origin to sphere center
         let orig_to_center = self.center - ray.origin;
