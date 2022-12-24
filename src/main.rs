@@ -5,7 +5,10 @@ extern crate piston_window;
 mod tinyraytracer;
 
 use image::{Rgba, RgbaImage};
+use nalgebra::{Point3, Vector3};
 use piston_window::EventLoop;
+
+use tinyraytracer::{Camera, Sphere};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 800;
@@ -13,13 +16,18 @@ const HEIGHT: u32 = 800;
 fn main() {
     let mut img = RgbaImage::from_pixel(WIDTH, HEIGHT, Rgba([0, 0, 0, 255]));
 
-    for x in 0..img.width() {
-        for y in 0..img.height() {
-            let r = ((x as f32 / img.width() as f32) * 255.) as u8;
-            let g = ((y as f32 / img.height() as f32) * 255.) as u8;
-            img.put_pixel(x, y, Rgba([r, g, 0, 255]));
-        }
-    }
+    let camera = Camera {
+        img_width: 800.,
+        img_height: 800.,
+        fov: 120.,
+        position: Point3::new(0., 0., 5.),
+        view_dir: Vector3::new(0., 0., 1.),
+    };
+
+    let sphere = Sphere {
+        center: Point3::new(0., 0., 0.),
+        radius: 4.,
+    };
 
     image::imageops::flip_vertical_in_place(&mut img);
 
