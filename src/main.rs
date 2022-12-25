@@ -4,11 +4,13 @@ extern crate piston_window;
 
 mod tinyraytracer;
 
+use std::rc::Rc;
+
 use image::{Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
 use piston_window::EventLoop;
 
-use tinyraytracer::{Camera, Ray, Sphere, TraceObj};
+use tinyraytracer::{Camera, Material, Ray, Sphere, TraceObj};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -22,7 +24,7 @@ fn scene_intersect(ray: Ray, objs: &Vec<Box<dyn TraceObj>>) -> Option<Rgba<u8>> 
         if let Some(intersection) = obj.ray_intersect(&ray) {
             if intersection < intersect_dist {
                 intersect_dist = intersection;
-                color = Rgba([102, 102, 76, 255]);
+                color = obj.material().color;
             }
         }
     }
@@ -66,16 +68,41 @@ fn main() {
         position: Point3::new(0., 0., 0.),
     };
 
+    let ivory = Rc::new(Material {
+        color: Rgba([102, 102, 76, 255]),
+    });
+
+    let red_rubber = Rc::new(Material {
+        color: Rgba([76, 25, 25, 255]),
+    });
+
     let sphere0 = Sphere {
         center: Point3::new(-3., 0., -16.),
         radius: 2.,
+        material: ivory.clone(),
     };
     let sphere1 = Sphere {
-        center: Point3::new(-0.5, 0., -16.),
-        radius: 1.,
+        center: Point3::new(-1., -1.5, -12.),
+        radius: 2.,
+        material: red_rubber.clone(),
+    };
+    let sphere2 = Sphere {
+        center: Point3::new(1.5, -0.5, -18.),
+        radius: 3.,
+        material: red_rubber.clone(),
+    };
+    let sphere3 = Sphere {
+        center: Point3::new(7., 5., -18.),
+        radius: 4.,
+        material: ivory.clone(),
     };
 
-    let spheres: Vec<Box<dyn TraceObj>> = vec![Box::new(sphere0), Box::new(sphere1)];
+    let spheres: Vec<Box<dyn TraceObj>> = vec![
+        Box::new(sphere0),
+        Box::new(sphere1),
+        Box::new(sphere2),
+        Box::new(sphere3),
+    ];
 
     render(&spheres, camera, &mut img);
 

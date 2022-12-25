@@ -1,8 +1,16 @@
+use std::rc::Rc;
+
+use image::Rgba;
 use nalgebra::{Point3, Vector3};
 
 pub struct Sphere {
     pub center: Point3<f32>,
     pub radius: f32,
+    pub material: Rc<Material>,
+}
+
+pub struct Material {
+    pub color: Rgba<u8>,
 }
 
 pub struct Camera {
@@ -17,6 +25,7 @@ pub struct Ray {
 
 pub trait TraceObj {
     fn ray_intersect(&self, ray: &Ray) -> Option<f32>;
+    fn material(&self) -> &Material;
 }
 
 impl TraceObj for Sphere {
@@ -51,5 +60,9 @@ impl TraceObj for Sphere {
             // If both are negative, both are behind the ray, so there is no intersection
             _ => None,
         }
+    }
+
+    fn material(&self) -> &Material {
+        &self.material
     }
 }
