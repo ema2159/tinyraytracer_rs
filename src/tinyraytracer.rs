@@ -33,7 +33,7 @@ impl TraceObj for Sphere {
         let sphere_center_to_ray_sq = orig_to_center.norm_squared() - proj_on_ray * proj_on_ray;
 
         // If line from sphere center to ray is longer than radius, there is no intersection point
-        if sphere_center_to_ray_sq <= self.radius * self.radius {
+        if sphere_center_to_ray_sq > self.radius * self.radius {
             return None;
         }
 
