@@ -9,6 +9,11 @@ pub struct Sphere {
     pub material: Rc<Material>,
 }
 
+pub struct Light {
+    pub position: Point3<f32>,
+    pub intensity: f32,
+}
+
 pub struct Material {
     pub color: Rgba<u8>,
 }
@@ -25,6 +30,7 @@ pub struct Ray {
 
 pub trait TraceObj {
     fn ray_intersect(&self, ray: &Ray) -> Option<f32>;
+    fn get_normal(&self, intersection_point: Point3<f32>) -> Vector3<f32>;
     fn material(&self) -> &Material;
 }
 
@@ -60,6 +66,10 @@ impl TraceObj for Sphere {
             // If both are negative, both are behind the ray, so there is no intersection
             _ => None,
         }
+    }
+
+    fn get_normal(&self, intersect_point: Point3<f32>) -> Vector3<f32> {
+        (intersect_point - self.center).normalize()
     }
 
     fn material(&self) -> &Material {
