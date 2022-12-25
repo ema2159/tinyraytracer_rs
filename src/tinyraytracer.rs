@@ -6,11 +6,8 @@ pub struct Sphere {
 }
 
 pub struct Camera {
-    pub img_width: f32,
-    pub img_height: f32,
     pub fov: f32,
     pub position: Point3<f32>,
-    pub view_dir: Vector3<f32>,
 }
 
 pub struct Ray {
