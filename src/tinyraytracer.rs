@@ -14,16 +14,16 @@ pub struct Camera {
 }
 
 pub struct Ray {
-    origin: Point3<f32>,
-    direction: Vector3<f32>,
+    pub origin: Point3<f32>,
+    pub direction: Vector3<f32>,
 }
 
-trait TraceObj {
-    fn ray_intersect(&self, ray: Ray) -> bool;
+pub trait TraceObj {
+    fn ray_intersect(&self, ray: &Ray) -> Option<f32>;
 }
 
 impl TraceObj for Sphere {
-    fn ray_intersect(&self, ray: Ray) -> Option<f32> {
+    fn ray_intersect(&self, ray: &Ray) -> Option<f32> {
         // Vector from ray origin to sphere center
         let orig_to_center = self.center - ray.origin;
         // Length of the vector that goes from the ray origin to the vertical line that passes
