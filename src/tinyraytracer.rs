@@ -82,29 +82,33 @@ impl TraceObj for Sphere {
     }
 }
 
-fn diffuse_intensity(point: Point3<f32>, normal: Vector3<f32>, lights: &Vec<Light>) -> f32 {
-    let mut diff_light_intensity = 0.;
-    for light in lights {
-        let light_dir = (light.position - point).normalize();
-        diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
-    }
-    diff_light_intensity
-}
-
-fn spec_intensity(
+fn get_point_color(
     ray: Ray,
     point: Point3<f32>,
     normal: Vector3<f32>,
     lights: &Vec<Light>,
-    spec_exponent: f32,
-) -> f32 {
+    material: &Material,
+) -> Rgba<u8> {
+    let mut diff_light_intensity = 0.;
     let mut spec_light_intensity = 0.;
+
     for light in lights {
         let light_dir = (light.position - point).normalize();
+        // Diffuse
+        diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
+        // Specular
         let reflected = (light_dir - normal * 2. * normal.dot(&light_dir)).dot(&ray.direction);
-        spec_light_intensity += f32::powf(f32::max(0., reflected), spec_exponent) * light.intensity;
+        spec_light_intensity +=
+            f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
     }
-    spec_light_intensity
+
+    // Apply Phong reflection model according to material properties
+    let mut color = material.color;
+    color.apply_without_alpha(|ch| {
+        (ch as f32 * (diff_light_intensity * material.albedo[0])
+            + 255. * spec_light_intensity * material.albedo[1]) as u8
+    });
+    color
 }
 
 fn scene_intersect(
@@ -130,15 +134,7 @@ fn scene_intersect(
 
     if intersect_dist < INTERSECT_LIMIT {
         let material = material.unwrap();
-        let diff_light_intensity = diffuse_intensity(intersect_point, normal, lights);
-        let spec_light_intensity =
-            spec_intensity(ray, intersect_point, normal, lights, material.spec_exponent);
-        let mut color = material.color;
-        println!("{}", spec_light_intensity * material.albedo[1]);
-        color.apply_without_alpha(|ch| {
-            (ch as f32 * (diff_light_intensity * material.albedo[0])
-                + 255. * spec_light_intensity * material.albedo[1]) as u8
-        });
+        let color = get_point_color(ray, intersect_point, normal, lights, material);
         Some(color)
     } else {
         None
