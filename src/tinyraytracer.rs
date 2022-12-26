@@ -7,6 +7,7 @@ use nalgebra::{Point3, Vector3};
 const INTERSECT_LIMIT: f32 = 1000.;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 
+/// Get pixel color according to the computed Phong model of the object closest to the camera.
 fn get_point_color(
     ray: Ray,
     point: Point3<f32>,
@@ -36,11 +37,14 @@ fn get_point_color(
     color
 }
 
+/// Compute the interaction of each ray (both from light sources and from the camera) with each
+/// object in the scene.
 fn scene_intersect(
     ray: Ray,
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
 ) -> Option<Rgba<u8>> {
+    // Placeholders
     let mut intersect_dist = f32::INFINITY;
     let mut material = None;
     let mut normal = Vector3::new(0., 0., 0.);
@@ -66,6 +70,10 @@ fn scene_intersect(
     }
 }
 
+/// Render scene through ray tracing
+/// Casts a series of rays that go from an origin (camera position) to each pixel of an image plane.
+/// Using such rays, as well as rays casted from the different light sources,the visibilty of each
+/// point of each object in the scene is determined,
 pub fn render(
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
@@ -76,8 +84,10 @@ pub fn render(
     let height = img.height() as f32;
     let y_fov = f32::tan(camera.fov / 2.);
     let x_fov = y_fov * (width / height);
+
     for x in 0..img.width() {
         for y in 0..img.height() {
+            // i and j components of the direction of the casted ray
             let i = ((2. * (x as f32 + 0.5) / width) - 1.) * x_fov;
             let j = -((2. * (y as f32 + 0.5) / height) - 1.) * y_fov;
 

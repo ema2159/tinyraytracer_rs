@@ -24,6 +24,7 @@ fn main() {
         position: Point3::new(0., 0., 0.),
     };
 
+    // Materials
     let ivory = Rc::new(Material {
         color: Rgba([102, 102, 76, 255]),
         albedo: [0.6, 0.3],
@@ -36,6 +37,7 @@ fn main() {
         spec_exponent: 10.,
     });
 
+    // Objects
     let sphere0 = Sphere {
         center: Point3::new(-3., 0., -16.),
         radius: 2.,
@@ -64,6 +66,7 @@ fn main() {
         Box::new(sphere3),
     ];
 
+    // Light sources
     let light0 = Light {
         position: Point3::new(-20., 20., 20.),
         intensity: 1.5,
@@ -79,6 +82,7 @@ fn main() {
 
     let lights: Vec<Light> = vec![light0, light1, light2];
 
+    // Render scene
     render(&spheres, &lights, camera, &mut img);
 
     // Rendering window
