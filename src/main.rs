@@ -10,9 +10,8 @@ use image::{Rgba, RgbaImage};
 use nalgebra::Point3;
 use piston_window::EventLoop;
 
-use tinyraytracer::{render, Camera, Material, Sphere, TraceObj};
-
-use crate::tinyraytracer::Light;
+use tinyraytracer::render;
+use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -28,13 +27,13 @@ fn main() {
     let ivory = Rc::new(Material {
         color: Rgba([102, 102, 76, 255]),
         albedo: [0.6, 0.3],
-        spec_exponent: 50.
+        spec_exponent: 50.,
     });
 
     let red_rubber = Rc::new(Material {
         color: Rgba([76, 25, 25, 255]),
         albedo: [0.9, 0.1],
-        spec_exponent: 10.
+        spec_exponent: 10.,
     });
 
     let sphere0 = Sphere {
