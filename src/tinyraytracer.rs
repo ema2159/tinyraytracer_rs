@@ -46,23 +46,22 @@ fn scene_intersect(
 ) -> Option<Rgba<u8>> {
     // Placeholders
     let mut intersect_dist = f32::INFINITY;
-    let mut material = None;
-    let mut normal = Vector3::new(0., 0., 0.);
-    let mut intersect_point = Point3::<f32>::origin();
+    let mut object = None;
 
     for obj in objs.iter() {
         if let Some(intersection) = obj.ray_intersect(&ray) {
             if intersection < intersect_dist {
                 intersect_dist = intersection;
-                intersect_point = ray.origin + ray.direction * intersect_dist;
-                normal = obj.get_normal(intersect_point);
-                material = Some(obj.material());
+                object = Some(obj);
             }
         }
     }
 
     if intersect_dist < INTERSECT_LIMIT {
-        let material = material.unwrap();
+        let object = object.unwrap();
+        let material = object.material();
+        let intersect_point = ray.origin + ray.direction * intersect_dist;
+        let normal = object.get_normal(intersect_point);
         let color = get_point_color(ray, intersect_point, normal, lights, material);
         Some(color)
     } else {
