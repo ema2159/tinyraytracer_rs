@@ -7,11 +7,44 @@ use nalgebra::{Point3, Vector3};
 const INTERSECT_LIMIT: f32 = 1000.;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 
+/// Determine if there is any object between two points. Used to render shadows.
+fn single_intersect(
+    src_point: Point3<f32>,
+    dst_point: Point3<f32>,
+    point_normal: Vector3<f32>,
+    objs: &Vec<Box<dyn TraceObj>>,
+) -> bool {
+    let ray_dir = (dst_point - src_point).normalize();
+    let ray_dist = (dst_point - src_point).norm();
+    let ray_origin = src_point
+        + point_normal
+            * (if ray_dir.dot(&point_normal) > 0. {
+                1e-3
+            } else {
+                -1e-3
+            });
+
+    let ray = Ray {
+        origin: ray_origin,
+        direction: ray_dir,
+    };
+
+    for obj in objs.iter() {
+        if let Some(intersection) = obj.ray_intersect(&ray) {
+            if intersection < ray_dist {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Get pixel color according to the computed Phong model of the object closest to the camera.
 fn get_point_color(
     ray: Ray,
     point: Point3<f32>,
     normal: Vector3<f32>,
+    objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
     material: &Material,
 ) -> Rgba<u8> {
@@ -19,6 +52,11 @@ fn get_point_color(
     let mut spec_light_intensity = 0.;
 
     for light in lights {
+        // Determine if there is any object between the current point and the light source
+        if single_intersect(point, light.position, normal, &objs) {
+            continue;
+        };
+
         let light_dir = (light.position - point).normalize();
         // Diffuse
         diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
@@ -62,7 +100,7 @@ fn scene_intersect(
         let material = object.material();
         let intersect_point = ray.origin + ray.direction * intersect_dist;
         let normal = object.get_normal(intersect_point);
-        let color = get_point_color(ray, intersect_point, normal, lights, material);
+        let color = get_point_color(ray, intersect_point, normal, objs, lights, material);
         Some(color)
     } else {
         None
