@@ -7,6 +7,31 @@ use nalgebra::{Point3, Vector3};
 const INTERSECT_LIMIT: f32 = 1000.;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 
+/// Check if a given ray intersects any object. Return the nearest intersection distance and as well
+/// as the nearest object.
+fn scene_intersect<'a>(
+    ray: &'a Ray,
+    objs: &'a Vec<Box<dyn TraceObj>>,
+) -> Option<(f32, &'a Box<dyn TraceObj>)> {
+    // Placeholders
+    let mut intersect_dist = INTERSECT_LIMIT;
+    let mut object = None;
+
+    for obj in objs.iter() {
+        if let Some(intersection) = obj.ray_intersect(&ray) {
+            if intersection < intersect_dist {
+                intersect_dist = intersection;
+                object = Some(obj);
+            }
+        }
+    }
+    if intersect_dist < INTERSECT_LIMIT {
+        Some((intersect_dist, object.unwrap()))
+    } else {
+        None
+    }
+}
+
 /// Determine if there is any object between two points. Used to render shadows.
 fn single_intersect(
     src_point: Point3<f32>,
@@ -45,7 +70,7 @@ fn reflect_dir(light_dir: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
 
 /// Get pixel color according to the computed Phong model of the object closest to the camera.
 fn get_point_color(
-    ray: Ray,
+    ray: &Ray,
     point: Point3<f32>,
     normal: Vector3<f32>,
     objs: &Vec<Box<dyn TraceObj>>,
@@ -79,35 +104,16 @@ fn get_point_color(
     color
 }
 
-/// Compute the interaction of each ray (both from light sources and from the camera) with each
-/// object in the scene.
-fn scene_intersect(
-    ray: Ray,
-    objs: &Vec<Box<dyn TraceObj>>,
-    lights: &Vec<Light>,
-) -> Option<Rgba<u8>> {
-    // Placeholders
-    let mut intersect_dist = f32::INFINITY;
-    let mut object = None;
-
-    for obj in objs.iter() {
-        if let Some(intersection) = obj.ray_intersect(&ray) {
-            if intersection < intersect_dist {
-                intersect_dist = intersection;
-                object = Some(obj);
-            }
-        }
-    }
-
-    if intersect_dist < INTERSECT_LIMIT {
-        let object = object.unwrap();
+/// Cast a ray. Compute a color according to the elements of the scene the ray intersects.
+fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>) -> Rgba<u8> {
+    if let Some((intersect_dist, object)) = scene_intersect(&ray, &objs) {
         let material = object.material();
         let intersect_point = ray.origin + ray.direction * intersect_dist;
         let normal = object.get_normal(intersect_point);
-        let color = get_point_color(ray, intersect_point, normal, objs, lights, material);
-        Some(color)
+        let color = get_point_color(&ray, intersect_point, normal, objs, lights, material);
+        color
     } else {
-        None
+        BACKGROUND_COLOR
     }
 }
 
@@ -132,18 +138,15 @@ pub fn render(
             let i = ((2. * (x as f32 + 0.5) / width) - 1.) * x_fov;
             let j = -((2. * (y as f32 + 0.5) / height) - 1.) * y_fov;
 
-            if let Some(color) = scene_intersect(
+            let color = cast_ray(
                 Ray {
                     origin: camera.position,
                     direction: Vector3::new(i, j, -1.).normalize(),
                 },
                 objs,
                 lights,
-            ) {
-                img.put_pixel(x, y, color);
-            } else {
-                img.put_pixel(x, y, BACKGROUND_COLOR);
-            }
+            );
+            img.put_pixel(x, y, color);
         }
     }
 }
