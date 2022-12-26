@@ -39,6 +39,10 @@ fn single_intersect(
     false
 }
 
+fn reflect_dir(light_dir: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
+    light_dir - normal * 2. * normal.dot(&light_dir)
+}
+
 /// Get pixel color according to the computed Phong model of the object closest to the camera.
 fn get_point_color(
     ray: Ray,
@@ -61,7 +65,7 @@ fn get_point_color(
         // Diffuse
         diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
         // Specular
-        let reflected = (light_dir - normal * 2. * normal.dot(&light_dir)).dot(&ray.direction);
+        let reflected = reflect_dir(light_dir, normal).dot(&ray.direction);
         spec_light_intensity +=
             f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
     }
