@@ -27,10 +27,14 @@ fn main() {
 
     let ivory = Rc::new(Material {
         color: Rgba([102, 102, 76, 255]),
+        albedo: [0.6, 0.3],
+        spec_exponent: 50.
     });
 
     let red_rubber = Rc::new(Material {
         color: Rgba([76, 25, 25, 255]),
+        albedo: [0.9, 0.1],
+        spec_exponent: 10.
     });
 
     let sphere0 = Sphere {
@@ -65,7 +69,16 @@ fn main() {
         position: Point3::new(-20., 20., 20.),
         intensity: 1.5,
     };
-    let lights: Vec<Light> = vec![light0];
+    let light1 = Light {
+        position: Point3::new(30., 50., -25.),
+        intensity: 1.8,
+    };
+    let light2 = Light {
+        position: Point3::new(30., 20., 30.),
+        intensity: 1.7,
+    };
+
+    let lights: Vec<Light> = vec![light0, light1, light2];
 
     render(&spheres, &lights, camera, &mut img);
 
