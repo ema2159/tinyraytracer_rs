@@ -27,20 +27,30 @@ fn main() {
     // Materials
     let ivory = Rc::new(Material {
         color: Rgba([102, 102, 76, 255]),
-        albedo: [0.6, 0.3, 0.1],
+        albedo: [0.6, 0.3, 0.1, 0.],
         spec_exponent: 50.,
+        refr_ratio: 1.,
     });
 
     let red_rubber = Rc::new(Material {
         color: Rgba([76, 25, 25, 255]),
-        albedo: [0.9, 0.1, 0.],
+        albedo: [0.9, 0.1, 0., 0.],
         spec_exponent: 10.,
+        refr_ratio: 1.,
     });
 
     let mirror = Rc::new(Material {
         color: Rgba([255, 255, 255, 255]),
-        albedo: [0.0, 10., 0.8],
+        albedo: [0.0, 10., 0.8, 0.],
         spec_exponent: 1425.,
+        refr_ratio: 1.,
+    });
+
+    let glass = Rc::new(Material {
+        color: Rgba([255, 255, 255, 255]),
+        albedo: [0.0, 0.5, 0.1, 0.8],
+        spec_exponent: 125.,
+        refr_ratio: 1.5,
     });
 
     // Objects
@@ -52,7 +62,7 @@ fn main() {
     let sphere1 = Sphere {
         center: Point3::new(-1., -1.5, -12.),
         radius: 2.,
-        material: mirror.clone(),
+        material: glass.clone(),
     };
     let sphere2 = Sphere {
         center: Point3::new(1.5, -0.5, -18.),

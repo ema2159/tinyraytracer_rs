@@ -5,8 +5,9 @@ use image::{Pixel, Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
 
 const INTERSECT_LIMIT: f32 = 1000.;
-const REFLECTION_DEPTH: u8 = 4;
+const RAY_DEPTH: u8 = 4;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
+const ENV_REFR_IDX: f32 = 1.;
 
 /// Check if a given ray intersects any object. Return the nearest intersection distance and as well
 /// as the nearest object.
@@ -66,10 +67,6 @@ fn single_intersect(
     false
 }
 
-fn reflect_dir(light_dir: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
-    light_dir - normal * 2. * normal.dot(&light_dir)
-}
-
 /// Get pixel color according to the computed Phong model of the object closest to the camera.
 fn get_point_color(
     ray: &Ray,
@@ -105,6 +102,23 @@ fn get_point_color(
         reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo[2]) as u8);
     }
 
+    // Get refraction image
+    let mut refr_color = Rgba([0, 0, 0, 0]);
+    if material.albedo[3] > 0. {
+        if let Some(mut refraction) = get_refraction_color(
+            &ray,
+            point,
+            normal,
+            material.refr_ratio,
+            objs,
+            lights,
+            depth,
+        ) {
+            refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo[3]) as u8);
+            refr_color = refraction;
+        }
+    }
+
     // Apply Phong reflection model according to material properties. Also add reflections.
     let mut color_channels = material.color.0;
     color_channels[..=2] // Only process R, G, and B channels
@@ -113,12 +127,19 @@ fn get_point_color(
         .for_each(|(i, ch)| {
             *ch = (*ch as f32 * (diff_light_intensity * material.albedo[0])
                 + 255. * spec_light_intensity * material.albedo[1]
-                + reflection[i] as f32) as u8;
+                + reflection[i] as f32
+                + refr_color[i] as f32) as u8;
         });
 
     Rgba(color_channels)
 }
 
+fn reflect_dir(light_dir: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
+    light_dir - normal * 2. * normal.dot(&light_dir)
+}
+
+/// Recursively reflect a ray until no intersection is met or until ray depth is reached.
+/// Return the resulting reflection color.
 fn get_reflection_color(
     ray: &Ray,
     point: Point3<f32>,
@@ -144,9 +165,66 @@ fn get_reflection_color(
     cast_ray(ray, objs, lights, depth + 1)
 }
 
+fn refract_dir(
+    light_dir: Vector3<f32>,
+    normal: Vector3<f32>,
+    n1: f32,
+    n2: f32,
+) -> Option<Vector3<f32>> {
+    let cos = -f32::max(-1., f32::min(1., normal.dot(&light_dir)));
+    // If ray inside object
+    if cos < 0. {
+        return refract_dir(light_dir, -normal, n2, n1);
+    }
+
+    let eta = n1 / n2;
+
+    let k = 1. - (eta * eta) * (1. - cos);
+    if k > 0. {
+        let refracted = eta * light_dir + (eta * cos - f32::sqrt(k)) * normal;
+        // The ray refracts.
+        Some(refracted.normalize())
+    } else {
+        // Total internal reflection. No refraction occurs.
+        None
+    }
+}
+
+/// Recursively refract a ray until no intersection is met or until ray depth is reached.
+/// Return the resulting refr_color color.
+fn get_refraction_color(
+    ray: &Ray,
+    point: Point3<f32>,
+    normal: Vector3<f32>,
+    refr_ratio: f32,
+    objs: &Vec<Box<dyn TraceObj>>,
+    lights: &Vec<Light>,
+    depth: u8,
+) -> Option<Rgba<u8>> {
+    if let Some(ray_dir) = refract_dir(ray.direction, normal, ENV_REFR_IDX, refr_ratio) {
+        // Perturb origin point so ray doesn't intersect with originating object.
+        let ray_origin = point
+            + normal
+                * (if ray_dir.dot(&normal) > 0. {
+                    1e-3
+                } else {
+                    -1e-3
+                });
+
+        let ray = Ray {
+            origin: ray_origin,
+            direction: ray_dir,
+        };
+        Some(cast_ray(ray, objs, lights, depth + 1))
+    } else {
+        // Total internal reflection. No refraction
+        None
+    }
+}
+
 /// Cast a ray. Compute a color according to the elements of the scene the ray intersects.
 fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>, depth: u8) -> Rgba<u8> {
-    if depth >= REFLECTION_DEPTH {
+    if depth >= RAY_DEPTH {
         return BACKGROUND_COLOR;
     }
 

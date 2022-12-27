@@ -16,8 +16,9 @@ pub struct Light {
 
 pub struct Material {
     pub color: Rgba<u8>,
-    pub albedo: [f32; 3],
+    pub albedo: [f32; 4],
     pub spec_exponent: f32,
+    pub refr_ratio: f32,
 }
 
 pub struct Camera {
