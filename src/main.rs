@@ -99,7 +99,11 @@ fn main() {
     let lights: Vec<Light> = vec![light0, light1, light2];
 
     // Render scene
+    use std::time::Instant;
+    let now = Instant::now();
     render(&spheres, &lights, camera, &mut img);
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 
     // Rendering window
     let mut window: piston_window::PistonWindow =
