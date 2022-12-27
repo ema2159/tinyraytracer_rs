@@ -67,73 +67,6 @@ fn single_intersect(
     false
 }
 
-/// Get pixel color according to the computed Phong model of the object closest to the camera.
-fn get_point_color(
-    ray: &Ray,
-    point: Point3<f32>,
-    normal: Vector3<f32>,
-    objs: &Vec<Box<dyn TraceObj>>,
-    lights: &Vec<Light>,
-    material: &Material,
-    depth: u8,
-) -> Rgba<u8> {
-    let mut diff_light_intensity = 0.;
-    let mut spec_light_intensity = 0.;
-
-    for light in lights {
-        // Determine if there is any object between the current point and the light source
-        if single_intersect(point, light.position, normal, &objs) {
-            continue;
-        };
-
-        let light_dir = (light.position - point).normalize();
-        // Diffuse
-        diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
-        // Specular
-        let reflected = reflect_dir(light_dir, normal).dot(&ray.direction);
-        spec_light_intensity +=
-            f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
-    }
-
-    // Get reflection image
-    let mut reflection = Rgba([0, 0, 0, 0]);
-    if material.albedo[2] > 0. {
-        reflection = get_reflection_color(&ray, point, normal, objs, lights, depth);
-        reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo[2]) as u8);
-    }
-
-    // Get refraction image
-    let mut refr_color = Rgba([0, 0, 0, 0]);
-    if material.albedo[3] > 0. {
-        if let Some(mut refraction) = get_refraction_color(
-            &ray,
-            point,
-            normal,
-            material.refr_ratio,
-            objs,
-            lights,
-            depth,
-        ) {
-            refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo[3]) as u8);
-            refr_color = refraction;
-        }
-    }
-
-    // Apply Phong reflection model according to material properties. Also add reflections.
-    let mut color_channels = material.color.0;
-    color_channels[..=2] // Only process R, G, and B channels
-        .iter_mut()
-        .enumerate()
-        .for_each(|(i, ch)| {
-            *ch = (*ch as f32 * (diff_light_intensity * material.albedo[0])
-                + 255. * spec_light_intensity * material.albedo[1]
-                + reflection[i] as f32
-                + refr_color[i] as f32) as u8;
-        });
-
-    Rgba(color_channels)
-}
-
 fn reflect_dir(light_dir: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
     light_dir - normal * 2. * normal.dot(&light_dir)
 }
@@ -220,6 +153,73 @@ fn get_refraction_color(
         // Total internal reflection. No refraction
         None
     }
+}
+
+/// Get pixel color according to the computed Phong model of the object closest to the camera.
+fn get_point_color(
+    ray: &Ray,
+    point: Point3<f32>,
+    normal: Vector3<f32>,
+    objs: &Vec<Box<dyn TraceObj>>,
+    lights: &Vec<Light>,
+    material: &Material,
+    depth: u8,
+) -> Rgba<u8> {
+    let mut diff_light_intensity = 0.;
+    let mut spec_light_intensity = 0.;
+
+    for light in lights {
+        // Determine if there is any object between the current point and the light source
+        if single_intersect(point, light.position, normal, &objs) {
+            continue;
+        };
+
+        let light_dir = (light.position - point).normalize();
+        // Diffuse
+        diff_light_intensity += light.intensity * f32::max(0., light_dir.dot(&normal));
+        // Specular
+        let reflected = reflect_dir(light_dir, normal).dot(&ray.direction);
+        spec_light_intensity +=
+            f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
+    }
+
+    // Get reflection image
+    let mut reflection = Rgba([0, 0, 0, 0]);
+    if material.albedo[2] > 0. {
+        reflection = get_reflection_color(&ray, point, normal, objs, lights, depth);
+        reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo[2]) as u8);
+    }
+
+    // Get refraction image
+    let mut refr_color = Rgba([0, 0, 0, 0]);
+    if material.albedo[3] > 0. {
+        if let Some(mut refraction) = get_refraction_color(
+            &ray,
+            point,
+            normal,
+            material.refr_ratio,
+            objs,
+            lights,
+            depth,
+        ) {
+            refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo[3]) as u8);
+            refr_color = refraction;
+        }
+    }
+
+    // Apply Phong reflection model according to material properties. Also add reflections.
+    let mut color_channels = material.color.0;
+    color_channels[..=2] // Only process R, G, and B channels
+        .iter_mut()
+        .enumerate()
+        .for_each(|(i, ch)| {
+            *ch = (*ch as f32 * (diff_light_intensity * material.albedo[0])
+                + 255. * spec_light_intensity * material.albedo[1]
+                + reflection[i] as f32
+                + refr_color[i] as f32) as u8;
+        });
+
+    Rgba(color_channels)
 }
 
 /// Cast a ray. Compute a color according to the elements of the scene the ray intersects.
