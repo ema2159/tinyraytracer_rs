@@ -16,7 +16,7 @@ pub struct Light {
 
 pub struct Material {
     pub color: Rgba<u8>,
-    pub albedo: [f32; 2],
+    pub albedo: [f32; 3],
     pub spec_exponent: f32,
 }
 

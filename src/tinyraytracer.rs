@@ -5,6 +5,7 @@ use image::{Pixel, Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
 
 const INTERSECT_LIMIT: f32 = 1000.;
+const REFLECTION_DEPTH: u8 = 4;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 
 /// Check if a given ray intersects any object. Return the nearest intersection distance and as well
@@ -41,6 +42,7 @@ fn single_intersect(
 ) -> bool {
     let ray_dir = (dst_point - src_point).normalize();
     let ray_dist = (dst_point - src_point).norm();
+    // Perturb origin point so ray doesn't intersect with originating object.
     let ray_origin = src_point
         + point_normal
             * (if ray_dir.dot(&point_normal) > 0. {
@@ -76,6 +78,7 @@ fn get_point_color(
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
     material: &Material,
+    depth: u8,
 ) -> Rgba<u8> {
     let mut diff_light_intensity = 0.;
     let mut spec_light_intensity = 0.;
@@ -95,22 +98,63 @@ fn get_point_color(
             f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
     }
 
-    // Apply Phong reflection model according to material properties
-    let mut color = material.color;
-    color.apply_without_alpha(|ch| {
-        (ch as f32 * (diff_light_intensity * material.albedo[0])
-            + 255. * spec_light_intensity * material.albedo[1]) as u8
-    });
-    color
+    // Get reflection image
+    let mut reflection = Rgba([0, 0, 0, 0]);
+    if material.albedo[2] > 0. {
+        reflection = get_reflection_color(&ray, point, normal, objs, lights, depth);
+        reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo[2]) as u8);
+    }
+
+    // Apply Phong reflection model according to material properties. Also add reflections.
+    let mut color_channels = material.color.0;
+    color_channels[..=2] // Only process R, G, and B channels
+        .iter_mut()
+        .enumerate()
+        .for_each(|(i, ch)| {
+            *ch = (*ch as f32 * (diff_light_intensity * material.albedo[0])
+                + 255. * spec_light_intensity * material.albedo[1]
+                + reflection[i] as f32) as u8;
+        });
+
+    Rgba(color_channels)
+}
+
+fn get_reflection_color(
+    ray: &Ray,
+    point: Point3<f32>,
+    normal: Vector3<f32>,
+    objs: &Vec<Box<dyn TraceObj>>,
+    lights: &Vec<Light>,
+    depth: u8,
+) -> Rgba<u8> {
+    let ray_dir = reflect_dir(ray.direction, normal);
+    // Perturb origin point so ray doesn't intersect with originating object.
+    let ray_origin = point
+        + normal
+            * (if ray_dir.dot(&normal) > 0. {
+                1e-3
+            } else {
+                -1e-3
+            });
+
+    let ray = Ray {
+        origin: ray_origin,
+        direction: ray_dir,
+    };
+    cast_ray(ray, objs, lights, depth + 1)
 }
 
 /// Cast a ray. Compute a color according to the elements of the scene the ray intersects.
-fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>) -> Rgba<u8> {
+fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>, depth: u8) -> Rgba<u8> {
+    if depth >= REFLECTION_DEPTH {
+        return BACKGROUND_COLOR;
+    }
+
     if let Some((intersect_dist, object)) = scene_intersect(&ray, &objs) {
         let material = object.material();
         let intersect_point = ray.origin + ray.direction * intersect_dist;
         let normal = object.get_normal(intersect_point);
-        let color = get_point_color(&ray, intersect_point, normal, objs, lights, material);
+        let color = get_point_color(&ray, intersect_point, normal, objs, lights, material, depth);
         color
     } else {
         BACKGROUND_COLOR
@@ -145,6 +189,7 @@ pub fn render(
                 },
                 objs,
                 lights,
+                0,
             );
             img.put_pixel(x, y, color);
         }

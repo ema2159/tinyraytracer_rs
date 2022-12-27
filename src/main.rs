@@ -27,14 +27,20 @@ fn main() {
     // Materials
     let ivory = Rc::new(Material {
         color: Rgba([102, 102, 76, 255]),
-        albedo: [0.6, 0.3],
+        albedo: [0.6, 0.3, 0.1],
         spec_exponent: 50.,
     });
 
     let red_rubber = Rc::new(Material {
         color: Rgba([76, 25, 25, 255]),
-        albedo: [0.9, 0.1],
+        albedo: [0.9, 0.1, 0.],
         spec_exponent: 10.,
+    });
+
+    let mirror = Rc::new(Material {
+        color: Rgba([255, 255, 255, 255]),
+        albedo: [0.0, 10., 0.8],
+        spec_exponent: 1425.,
     });
 
     // Objects
@@ -46,7 +52,7 @@ fn main() {
     let sphere1 = Sphere {
         center: Point3::new(-1., -1.5, -12.),
         radius: 2.,
-        material: red_rubber.clone(),
+        material: mirror.clone(),
     };
     let sphere2 = Sphere {
         center: Point3::new(1.5, -0.5, -18.),
@@ -56,7 +62,7 @@ fn main() {
     let sphere3 = Sphere {
         center: Point3::new(7., 5., -18.),
         radius: 4.,
-        material: ivory.clone(),
+        material: mirror.clone(),
     };
 
     let spheres: Vec<Box<dyn TraceObj>> = vec![
