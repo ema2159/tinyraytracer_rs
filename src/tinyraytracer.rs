@@ -9,7 +9,7 @@ const RAY_DEPTH: u8 = 4;
 const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 const ENV_REFR_IDX: f32 = 1.;
 
-/// Check if a given ray intersects any object. Return the nearest intersection distance and as well
+/// Check if a given ray intersects any object. Return the nearest intersection distance as well
 /// as the nearest object.
 fn scene_intersect<'a>(
     ray: &'a Ray,

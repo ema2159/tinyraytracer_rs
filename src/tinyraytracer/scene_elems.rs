@@ -9,6 +9,13 @@ pub struct Sphere {
     pub material: Rc<Material>,
 }
 
+pub struct Plane {
+    pub center: Point3<f32>,
+    pub normal: Vector3<f32>,
+    pub dims: [f32; 2],
+    pub material: Rc<Material>,
+}
+
 pub struct Light {
     pub position: Point3<f32>,
     pub intensity: f32,
@@ -73,6 +80,29 @@ impl TraceObj for Sphere {
 
     fn get_normal(&self, intersect_point: Point3<f32>) -> Vector3<f32> {
         (intersect_point - self.center).normalize()
+    }
+
+    fn material(&self) -> &Material {
+        &self.material
+    }
+}
+
+impl TraceObj for Plane {
+    fn ray_intersect(&self, ray: &Ray) -> Option<f32> {
+        let d = -self.normal.dot(&self.center.coords); // Parameter of plane equation
+
+        let n_dot_raydir = -self.normal.dot(&ray.direction);
+        if n_dot_raydir <= 0. {
+            return None;
+        }
+
+        let t = (self.normal.dot(&ray.origin.coords) + d) / n_dot_raydir;
+
+        Some((t * ray.direction).norm())
+    }
+
+    fn get_normal(&self, _intersect_point: Point3<f32>) -> Vector3<f32> {
+        self.normal
     }
 
     fn material(&self) -> &Material {

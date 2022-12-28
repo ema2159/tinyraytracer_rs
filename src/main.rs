@@ -7,11 +7,11 @@ mod tinyraytracer;
 use std::rc::Rc;
 
 use image::{Rgba, RgbaImage};
-use nalgebra::Point3;
+use nalgebra::{Point3, Vector3};
 use piston_window::EventLoop;
 
 use tinyraytracer::render;
-use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj};
+use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj, Plane};
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -74,12 +74,19 @@ fn main() {
         radius: 4.,
         material: mirror.clone(),
     };
+    let plane = Plane {
+        center: Point3::new(0., -5., 0.),
+        normal: Vector3::new(0., 1., 0.),
+        material: red_rubber.clone(),
+        dims: [3., 4.],
+    };
 
-    let spheres: Vec<Box<dyn TraceObj>> = vec![
+    let objs: Vec<Box<dyn TraceObj>> = vec![
         Box::new(sphere0),
         Box::new(sphere1),
         Box::new(sphere2),
         Box::new(sphere3),
+        Box::new(plane),
     ];
 
     // Light sources
@@ -101,7 +108,7 @@ fn main() {
     // Render scene
     use std::time::Instant;
     let now = Instant::now();
-    render(&spheres, &lights, camera, &mut img);
+    render(&objs, &lights, camera, &mut img);
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
 
