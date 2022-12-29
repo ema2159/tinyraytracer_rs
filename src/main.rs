@@ -58,7 +58,8 @@ fn main() {
     });
 
     let checkered_floor = Rc::new(CheckerFloorMaterial {
-        color: Rgba([76, 25, 25, 255]),
+        color0: Rgba([76, 76, 76, 255]),
+        color1: Rgba([76, 53, 22, 255]),
         albedo: [0.9, 0.1, 0., 0.],
         spec_exponent: 10.,
         refr_ratio: 1.,

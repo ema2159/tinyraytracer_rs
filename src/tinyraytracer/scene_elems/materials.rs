@@ -31,7 +31,8 @@ impl Material for PlainMaterial {
 }
 
 pub struct CheckerFloorMaterial {
-    pub color: Rgba<u8>,
+    pub color0: Rgba<u8>,
+    pub color1: Rgba<u8>,
     pub albedo: [f32; 4],
     pub spec_exponent: f32,
     pub refr_ratio: f32,
@@ -40,9 +41,9 @@ pub struct CheckerFloorMaterial {
 impl Material for CheckerFloorMaterial {
     fn color(&self, intersection_pt: Point3<f32>) -> Rgba<u8> {
         if ((0.5 * intersection_pt.x + 1000.) as i32 + (0.5 * intersection_pt.z) as i32) & 1 == 1 {
-            Rgba([76, 76, 76, 255])
+            self.color0
         } else {
-            Rgba([76, 53, 22, 255])
+            self.color1
         }
     }
     fn albedo(&self) -> [f32; 4] {
