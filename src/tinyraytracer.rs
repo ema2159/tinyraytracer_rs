@@ -1,7 +1,7 @@
 pub mod scene_elems;
 
 pub use self::scene_elems::materials;
-pub use self::scene_elems::{Camera, Light, PlainMaterial, Ray, Sphere, TraceObj};
+pub use self::scene_elems::{Camera, Light, Material, PlainMaterial, Ray, Sphere, TraceObj};
 use image::{Pixel, Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
 
@@ -163,7 +163,7 @@ fn get_point_color(
     normal: Vector3<f32>,
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
-    material: &PlainMaterial,
+    material: &dyn Material,
     depth: u8,
 ) -> Rgba<u8> {
     let mut diff_light_intensity = 0.;
@@ -181,41 +181,41 @@ fn get_point_color(
         // Specular
         let reflected = reflect_dir(light_dir, normal).dot(&ray.direction);
         spec_light_intensity +=
-            f32::powf(f32::max(0., reflected), material.spec_exponent) * light.intensity;
+            f32::powf(f32::max(0., reflected), material.spec_exponent()) * light.intensity;
     }
 
     // Get reflection image
     let mut reflection = Rgba([0, 0, 0, 0]);
-    if material.albedo[2] > 0. {
+    if material.albedo()[2] > 0. {
         reflection = get_reflection_color(&ray, point, normal, objs, lights, depth);
-        reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo[2]) as u8);
+        reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo()[2]) as u8);
     }
 
     // Get refraction image
     let mut refr_color = Rgba([0, 0, 0, 0]);
-    if material.albedo[3] > 0. {
+    if material.albedo()[3] > 0. {
         if let Some(mut refraction) = get_refraction_color(
             &ray,
             point,
             normal,
-            material.refr_ratio,
+            material.refr_ratio(),
             objs,
             lights,
             depth,
         ) {
-            refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo[3]) as u8);
+            refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo()[3]) as u8);
             refr_color = refraction;
         }
     }
 
     // Apply Phong reflection model according to material properties. Also add reflections.
-    let mut color_channels = material.color.0;
+    let mut color_channels = material.color(point).0;
     color_channels[..=2] // Only process R, G, and B channels
         .iter_mut()
         .enumerate()
         .for_each(|(i, ch)| {
-            *ch = (*ch as f32 * (diff_light_intensity * material.albedo[0])
-                + 255. * spec_light_intensity * material.albedo[1]
+            *ch = (*ch as f32 * (diff_light_intensity * material.albedo()[0])
+                + 255. * spec_light_intensity * material.albedo()[1]
                 + reflection[i] as f32
                 + refr_color[i] as f32) as u8;
         });
