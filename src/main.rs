@@ -7,11 +7,13 @@ mod tinyraytracer;
 use std::rc::Rc;
 
 use image::{Rgba, RgbaImage};
-use nalgebra::{Point3, Vector3};
+use nalgebra::Point3;
 use piston_window::EventLoop;
 
 use tinyraytracer::render;
-use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj, Plane};
+use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj};
+
+use crate::tinyraytracer::scene_elems::Rectangle;
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
@@ -74,11 +76,11 @@ fn main() {
         radius: 4.,
         material: mirror.clone(),
     };
-    let plane = Plane {
-        center: Point3::new(0., -5., 0.),
-        normal: Vector3::new(0., 1., 0.),
+    let plane = Rectangle {
+        low_left: Point3::new(-7., -5., -12.),
+        low_right: Point3::new(7., -5., -12.),
+        up_left: Point3::new(-7., -5., -18.),
         material: red_rubber.clone(),
-        dims: [3., 4.],
     };
 
     let objs: Vec<Box<dyn TraceObj>> = vec![
