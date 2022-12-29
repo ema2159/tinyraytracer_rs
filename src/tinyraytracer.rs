@@ -1,6 +1,7 @@
 pub mod scene_elems;
 
-use self::scene_elems::{Camera, Light, Material, Ray, TraceObj};
+pub use self::scene_elems::materials;
+pub use self::scene_elems::{Camera, Light, PlainMaterial, Ray, Sphere, TraceObj};
 use image::{Pixel, Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
 
@@ -162,7 +163,7 @@ fn get_point_color(
     normal: Vector3<f32>,
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
-    material: &Material,
+    material: &PlainMaterial,
     depth: u8,
 ) -> Rgba<u8> {
     let mut diff_light_intensity = 0.;

@@ -10,8 +10,9 @@ use image::{Rgba, RgbaImage};
 use nalgebra::Point3;
 use piston_window::EventLoop;
 
+use tinyraytracer::materials::PlainMaterial;
 use tinyraytracer::render;
-use tinyraytracer::scene_elems::{Camera, Light, Material, Sphere, TraceObj};
+use tinyraytracer::{Camera, Light, Sphere, TraceObj};
 
 use crate::tinyraytracer::scene_elems::Rectangle;
 
@@ -27,28 +28,28 @@ fn main() {
     };
 
     // Materials
-    let ivory = Rc::new(Material {
+    let ivory = Rc::new(PlainMaterial {
         color: Rgba([102, 102, 76, 255]),
         albedo: [0.6, 0.3, 0.1, 0.],
         spec_exponent: 50.,
         refr_ratio: 1.,
     });
 
-    let red_rubber = Rc::new(Material {
+    let red_rubber = Rc::new(PlainMaterial {
         color: Rgba([76, 25, 25, 255]),
         albedo: [0.9, 0.1, 0., 0.],
         spec_exponent: 10.,
         refr_ratio: 1.,
     });
 
-    let mirror = Rc::new(Material {
+    let mirror = Rc::new(PlainMaterial {
         color: Rgba([255, 255, 255, 255]),
         albedo: [0.0, 10., 0.8, 0.],
         spec_exponent: 1425.,
         refr_ratio: 1.,
     });
 
-    let glass = Rc::new(Material {
+    let glass = Rc::new(PlainMaterial {
         color: Rgba([255, 255, 255, 255]),
         albedo: [0.0, 0.5, 0.1, 0.8],
         spec_exponent: 125.,
@@ -77,9 +78,9 @@ fn main() {
         material: mirror.clone(),
     };
     let plane = Rectangle {
-        low_left: Point3::new(-7., -5., -12.),
-        low_right: Point3::new(7., -5., -12.),
-        up_left: Point3::new(-7., -5., -18.),
+        low_left: Point3::new(-10., -4., -10.),
+        low_right: Point3::new(10., -4., -10.),
+        up_left: Point3::new(-10., -4., -30.),
         material: red_rubber.clone(),
     };
 

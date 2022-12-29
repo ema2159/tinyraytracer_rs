@@ -1,38 +1,34 @@
+pub mod materials;
+
 use std::rc::Rc;
 
-use image::Rgba;
 use nalgebra::{Point3, Vector3};
+
+pub use self::materials::PlainMaterial;
 
 pub struct Sphere {
     pub center: Point3<f32>,
     pub radius: f32,
-    pub material: Rc<Material>,
+    pub material: Rc<PlainMaterial>,
 }
 
 pub struct Plane {
     pub p0: Point3<f32>,
     pub normal: Vector3<f32>,
     pub dims: [f32; 2],
-    pub material: Rc<Material>,
+    pub material: Rc<PlainMaterial>,
 }
 
 pub struct Rectangle {
     pub low_left: Point3<f32>,
     pub low_right: Point3<f32>,
     pub up_left: Point3<f32>,
-    pub material: Rc<Material>,
+    pub material: Rc<PlainMaterial>,
 }
 
 pub struct Light {
     pub position: Point3<f32>,
     pub intensity: f32,
-}
-
-pub struct Material {
-    pub color: Rgba<u8>,
-    pub albedo: [f32; 4],
-    pub spec_exponent: f32,
-    pub refr_ratio: f32,
 }
 
 pub struct Camera {
@@ -48,7 +44,7 @@ pub struct Ray {
 pub trait TraceObj {
     fn ray_intersect(&self, ray: &Ray) -> Option<f32>;
     fn get_normal(&self, intersection_point: Point3<f32>) -> Vector3<f32>;
-    fn material(&self) -> &Material;
+    fn material(&self) -> &PlainMaterial;
 }
 
 impl TraceObj for Sphere {
@@ -89,7 +85,7 @@ impl TraceObj for Sphere {
         (intersect_point - self.center).normalize()
     }
 
-    fn material(&self) -> &Material {
+    fn material(&self) -> &PlainMaterial {
         &self.material
     }
 }
@@ -114,7 +110,7 @@ impl TraceObj for Plane {
         self.normal
     }
 
-    fn material(&self) -> &Material {
+    fn material(&self) -> &PlainMaterial {
         &self.material
     }
 }
@@ -162,7 +158,7 @@ impl TraceObj for Rectangle {
         width_vec.cross(&height_vec).normalize()
     }
 
-    fn material(&self) -> &Material {
+    fn material(&self) -> &PlainMaterial {
         &self.material
     }
 }
