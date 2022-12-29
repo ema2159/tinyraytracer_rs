@@ -14,6 +14,7 @@ use tinyraytracer::materials::PlainMaterial;
 use tinyraytracer::render;
 use tinyraytracer::{Camera, Light, Sphere, TraceObj};
 
+use crate::tinyraytracer::materials::CheckerFloorMaterial;
 use crate::tinyraytracer::scene_elems::Rectangle;
 
 const WIDTH: u32 = 1024;
@@ -56,6 +57,13 @@ fn main() {
         refr_ratio: 1.5,
     });
 
+    let checkered_floor = Rc::new(CheckerFloorMaterial {
+        color: Rgba([76, 25, 25, 255]),
+        albedo: [0.9, 0.1, 0., 0.],
+        spec_exponent: 10.,
+        refr_ratio: 1.,
+    });
+
     // Objects
     let sphere0 = Sphere {
         center: Point3::new(-3., 0., -16.),
@@ -81,7 +89,7 @@ fn main() {
         low_left: Point3::new(-10., -4., -10.),
         low_right: Point3::new(10., -4., -10.),
         up_left: Point3::new(-10., -4., -30.),
-        material: red_rubber.clone(),
+        material: checkered_floor.clone(),
     };
 
     let objs: Vec<Box<dyn TraceObj>> = vec![
