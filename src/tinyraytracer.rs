@@ -231,7 +231,7 @@ fn get_background(background: &RgbaImage, direction: &Vector3<f32>) -> Rgba<u8> 
     let (x, y, z) = (direction.x, direction.y, direction.z);
 
     let cos_theta = y; // Given direction is a unit vector, y = cos(theta)
-    let phi = f32::signum(z) * f32::acos(x / f32::sqrt(x * x + z * z));
+    let phi = z.atan2(x);
 
     let height_pos = (((cos_theta + 1.) / 2.) * (background.height() - 1) as f32) as u32;
     let width_pos = (((f32::cos(phi) + 1.) / 2.) * (background.width() - 1) as f32) as u32;
