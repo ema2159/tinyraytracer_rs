@@ -4,6 +4,8 @@ extern crate piston_window;
 
 mod tinyraytracer;
 
+use std::env;
+use std::path::Path;
 use std::rc::Rc;
 
 use image::{Rgba, RgbaImage};
@@ -23,8 +25,24 @@ const HEIGHT: u32 = 768;
 fn main() {
     let mut img = RgbaImage::from_pixel(WIDTH, HEIGHT, Rgba([0, 0, 0, 255]));
 
+    // Assets dir
+    let args: Vec<String> = env::args().collect();
+    if args.len() <= 1 {
+        panic!("No assets directory provided!");
+    }
+    let assets_dir = Path::new(&args[1])
+        .canonicalize()
+        .unwrap_or_else(|_| panic!("Wrong path for assets directory!"));
+
+    // Load texture
+    let background_path = assets_dir.join("envmap.jpg");
+    let mut background = image::open(background_path)
+        .expect("Opening image failed")
+        .into_rgba8();
+    image::imageops::flip_vertical_in_place(&mut background);
+
     let camera = Camera {
-        fov: 1.0, // Radians
+        fov: 1., // Radians
         position: Point3::new(0., 0., 0.),
     };
 
@@ -120,7 +138,7 @@ fn main() {
     // Render scene
     use std::time::Instant;
     let now = Instant::now();
-    render(&objs, &lights, camera, &mut img);
+    render(&objs, &lights, &camera, &background, &mut img);
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
 

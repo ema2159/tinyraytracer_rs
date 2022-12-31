@@ -7,7 +7,6 @@ use nalgebra::{Point3, Vector3};
 
 const INTERSECT_LIMIT: f32 = 1000.;
 const RAY_DEPTH: u8 = 4;
-const BACKGROUND_COLOR: Rgba<u8> = Rgba([51, 178, 204, 255]);
 const ENV_REFR_IDX: f32 = 1.;
 
 /// Check if a given ray intersects any object. Return the nearest intersection distance as well
@@ -80,6 +79,7 @@ fn get_reflection_color(
     normal: Vector3<f32>,
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
+    background: &RgbaImage,
     depth: u8,
 ) -> Rgba<u8> {
     let ray_dir = reflect_dir(ray.direction, normal);
@@ -96,7 +96,7 @@ fn get_reflection_color(
         origin: ray_origin,
         direction: ray_dir,
     };
-    cast_ray(ray, objs, lights, depth + 1)
+    cast_ray(ray, objs, lights, background, depth + 1)
 }
 
 fn refract_dir(
@@ -133,6 +133,7 @@ fn get_refraction_color(
     refr_ratio: f32,
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
+    background: &RgbaImage,
     depth: u8,
 ) -> Option<Rgba<u8>> {
     if let Some(ray_dir) = refract_dir(ray.direction, normal, ENV_REFR_IDX, refr_ratio) {
@@ -149,7 +150,7 @@ fn get_refraction_color(
             origin: ray_origin,
             direction: ray_dir,
         };
-        Some(cast_ray(ray, objs, lights, depth + 1))
+        Some(cast_ray(ray, objs, lights, background, depth + 1))
     } else {
         // Total internal reflection. No refraction
         None
@@ -164,6 +165,7 @@ fn get_point_color(
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
     material: &dyn Material,
+    background: &RgbaImage,
     depth: u8,
 ) -> Rgba<u8> {
     let mut diff_light_intensity = 0.;
@@ -187,7 +189,7 @@ fn get_point_color(
     // Get reflection image
     let mut reflection = Rgba([0, 0, 0, 0]);
     if material.albedo()[2] > 0. {
-        reflection = get_reflection_color(&ray, point, normal, objs, lights, depth);
+        reflection = get_reflection_color(&ray, point, normal, objs, lights, &background, depth);
         reflection.apply_without_alpha(|ch| ((ch as f32) * material.albedo()[2]) as u8);
     }
 
@@ -201,6 +203,7 @@ fn get_point_color(
             material.refr_ratio(),
             objs,
             lights,
+            &background,
             depth,
         ) {
             refraction.apply_without_alpha(|ch| ((ch as f32) * material.albedo()[3]) as u8);
@@ -223,20 +226,48 @@ fn get_point_color(
     Rgba(color_channels)
 }
 
+fn get_background(background: &RgbaImage, direction: &Vector3<f32>) -> Rgba<u8> {
+    // Calculate spherical coordinates of direction vector
+    let (x, y, z) = (direction.x, direction.y, direction.z);
+
+    let cos_theta = y; // Given direction is a unit vector, y = cos(theta)
+    let phi = f32::signum(z) * f32::acos(x / f32::sqrt(x * x + z * z));
+
+    let height_pos = (((cos_theta + 1.) / 2.) * (background.height() - 1) as f32) as u32;
+    let width_pos = (((f32::cos(phi) + 1.) / 2.) * (background.width() - 1) as f32) as u32;
+
+    *background.get_pixel(width_pos, height_pos)
+}
+
 /// Cast a ray. Compute a color according to the elements of the scene the ray intersects.
-fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>, depth: u8) -> Rgba<u8> {
+fn cast_ray(
+    ray: Ray,
+    objs: &Vec<Box<dyn TraceObj>>,
+    lights: &Vec<Light>,
+    background: &RgbaImage,
+    depth: u8,
+) -> Rgba<u8> {
     if depth >= RAY_DEPTH {
-        return BACKGROUND_COLOR;
+        return get_background(&background, &ray.direction);
     }
 
     if let Some((intersect_dist, object)) = scene_intersect(&ray, &objs) {
         let material = object.material();
         let intersect_point = ray.origin + ray.direction * intersect_dist;
         let normal = object.get_normal(intersect_point);
-        let color = get_point_color(&ray, intersect_point, normal, objs, lights, material, depth);
+        let color = get_point_color(
+            &ray,
+            intersect_point,
+            normal,
+            objs,
+            lights,
+            material,
+            &background,
+            depth,
+        );
         color
     } else {
-        BACKGROUND_COLOR
+        get_background(&background, &ray.direction)
     }
 }
 
@@ -247,7 +278,8 @@ fn cast_ray(ray: Ray, objs: &Vec<Box<dyn TraceObj>>, lights: &Vec<Light>, depth:
 pub fn render(
     objs: &Vec<Box<dyn TraceObj>>,
     lights: &Vec<Light>,
-    camera: Camera,
+    camera: &Camera,
+    background: &RgbaImage,
     img: &mut RgbaImage,
 ) {
     let width = img.width() as f32;
@@ -268,6 +300,7 @@ pub fn render(
                 },
                 objs,
                 lights,
+                background,
                 0,
             );
             img.put_pixel(x, y, color);
