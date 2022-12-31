@@ -230,7 +230,9 @@ fn get_background(background: &RgbaImage, direction: &Vector3<f32>) -> Rgba<u8> 
     // Calculate spherical coordinates of direction vector
     let (x, y, z) = (direction.x, direction.y, direction.z);
 
+    // Theta: Angle from spherical coordinates that covers half a circle ([-pi, pi]) vertically
     let cos_theta = y; // Given direction is a unit vector, y = cos(theta)
+    // Phi: Angle from spherical coordinates that covers a circle ([0, 2*pi]) horizontally
     let phi = z.atan2(x);
 
     let height_pos = (((cos_theta + 1.) / 2.) * (background.height() - 1) as f32) as u32;
