@@ -233,10 +233,10 @@ fn get_background(background: &RgbaImage, direction: &Vector3<f32>) -> Rgba<u8> 
     // Theta: Angle from spherical coordinates that covers half a circle ([-pi, pi]) vertically
     let cos_theta = y; // Given direction is a unit vector, y = cos(theta)
     // Phi: Angle from spherical coordinates that covers a circle ([0, 2*pi]) horizontally
-    let phi = z.atan2(x);
+    let cos_phi = f32::cos(z.atan2(x));
 
     let height_pos = (((cos_theta + 1.) / 2.) * (background.height() - 1) as f32) as u32;
-    let width_pos = (((f32::cos(phi) + 1.) / 2.) * (background.width() - 1) as f32) as u32;
+    let width_pos = (((cos_phi + 1.) / 2.) * (background.width() - 1) as f32) as u32;
 
     *background.get_pixel(width_pos, height_pos)
 }
