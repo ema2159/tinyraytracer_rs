@@ -7,7 +7,6 @@ use super::{materials::Material, Ray, TraceObj};
 pub struct Plane {
     pub p0: Point3<f32>,
     pub normal: Vector3<f32>,
-    pub dims: [f32; 2],
     pub material: Rc<dyn Material>,
 }
 
