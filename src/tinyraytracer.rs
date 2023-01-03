@@ -43,22 +43,13 @@ fn scene_intersect<'a>(
 fn single_intersect(
     src_point: Point3<f32>,
     dst_point: Point3<f32>,
-    point_normal: Vector3<f32>,
     objs: &Vec<Box<dyn TraceObj>>,
 ) -> bool {
-    let ray_dir = (dst_point - src_point).normalize();
-    let ray_dist = (dst_point - src_point).norm();
-    // Perturb origin point so ray doesn't intersect with originating object.
-    let ray_origin = src_point
-        + point_normal
-            * (if ray_dir.dot(&point_normal) > 0. {
-                1e-3
-            } else {
-                -1e-3
-            });
+    let ray_dir = -(dst_point - src_point).normalize();
+    let ray_dist = (dst_point - src_point).norm() - 1e-3;
 
     let ray = Ray {
-        origin: ray_origin,
+        origin: dst_point,
         direction: ray_dir,
     };
 
@@ -178,7 +169,7 @@ fn get_point_color(
 
     for light in lights {
         // Determine if there is any object between the current point and the light source
-        if single_intersect(point, light.position, normal, &objs) {
+        if single_intersect(point, light.position, &objs) {
             continue;
         };
 
