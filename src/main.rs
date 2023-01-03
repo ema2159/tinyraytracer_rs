@@ -1,28 +1,32 @@
 extern crate image;
 extern crate nalgebra;
+extern crate obj;
 extern crate piston_window;
 
 mod tinyraytracer;
 
 use std::env;
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::Path;
 use std::rc::Rc;
 
 use image::{Rgba, RgbaImage};
 use nalgebra::Point3;
+use obj::{load_obj, Obj, Position};
 use piston_window::EventLoop;
 
-use tinyraytracer::materials::PlainMaterial;
+use tinyraytracer::materials::{CheckerFloorMaterial, PlainMaterial};
 use tinyraytracer::render;
-use tinyraytracer::{Camera, Light, Sphere, TraceObj};
+use tinyraytracer::{Camera, Light, Rectangle, Sphere, TraceObj};
 
-use crate::tinyraytracer::materials::CheckerFloorMaterial;
-use crate::tinyraytracer::scene_elems::Rectangle;
+use crate::tinyraytracer::push_obj_faces;
 
 const WIDTH: u32 = 1024;
 const HEIGHT: u32 = 768;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut img = RgbaImage::from_pixel(WIDTH, HEIGHT, Rgba([0, 0, 0, 255]));
 
     // Assets dir
@@ -34,7 +38,12 @@ fn main() {
         .canonicalize()
         .unwrap_or_else(|_| panic!("Wrong path for assets directory!"));
 
-    // Load texture
+    // Load model
+    let obj_path = assets_dir.join("duck.obj");
+    let input = BufReader::new(File::open(obj_path)?);
+    let model: Obj<Position> = load_obj(input)?;
+
+    // Load environment map
     let background_path = assets_dir.join("envmap.jpg");
     let mut background = image::open(background_path)
         .expect("Opening image failed")
@@ -111,13 +120,14 @@ fn main() {
         material: checkered_floor.clone(),
     };
 
-    let objs: Vec<Box<dyn TraceObj>> = vec![
+    let mut objs: Vec<Box<dyn TraceObj>> = vec![
         Box::new(sphere0),
         Box::new(sphere1),
         Box::new(sphere2),
         Box::new(sphere3),
         Box::new(plane),
     ];
+    push_obj_faces(&model, &mut objs, glass);
 
     // Light sources
     let light0 = Light {
@@ -164,4 +174,5 @@ fn main() {
             piston_window::image(&texture, c.transform, g);
         });
     }
+    Ok(())
 }

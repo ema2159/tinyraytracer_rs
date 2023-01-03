@@ -1,9 +1,14 @@
 pub mod scene_elems;
 
+use std::rc::Rc;
+
 pub use self::scene_elems::materials;
-pub use self::scene_elems::{Camera, Light, Material, PlainMaterial, Ray, Sphere, TraceObj};
+pub use self::scene_elems::{
+    Camera, Light, Material, PlainMaterial, Ray, Rectangle, Sphere, TraceObj, Triangle,
+};
 use image::{Pixel, Rgba, RgbaImage};
 use nalgebra::{Point3, Vector3};
+use obj::{Obj, Position};
 
 const INTERSECT_LIMIT: f32 = 1000.;
 const RAY_DEPTH: u8 = 4;
@@ -308,5 +313,30 @@ pub fn render(
             );
             img.put_pixel(x, y, color);
         }
+    }
+}
+
+pub fn push_obj_faces(
+    model: &Obj<Position>,
+    objs_vec: &mut Vec<Box<dyn TraceObj>>,
+    material: Rc<dyn Material>,
+) {
+    let faces_num = model.indices.len();
+    let faces = &model.indices[..faces_num];
+
+    for face in faces.chunks(3) {
+        let [v0x, v0y, v0z] = model.vertices[face[0] as usize].position;
+        let [v1x, v1y, v1z] = model.vertices[face[1] as usize].position;
+        let [v2x, v2y, v2z] = model.vertices[face[2] as usize].position;
+        let point0 = Point3::<f32>::new(v0x, v0y, v0z);
+        let point1 = Point3::<f32>::new(v1x, v1y, v1z);
+        let point2 = Point3::<f32>::new(v2x, v2y, v2z);
+
+        objs_vec.push(Box::new(Triangle {
+            a: point0,
+            b: point1,
+            c: point2,
+            material: material.clone(),
+        }));
     }
 }
