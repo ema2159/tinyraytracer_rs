@@ -4,6 +4,7 @@ use nalgebra::{Point3, Vector3};
 
 use super::{materials::Material, Ray, TraceObj};
 
+#[derive(Debug)]
 pub struct Plane {
     pub p0: Point3<f32>,
     pub normal: Vector3<f32>,

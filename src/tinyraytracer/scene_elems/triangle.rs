@@ -4,6 +4,7 @@ use nalgebra::{Point3, Vector3};
 
 use super::{materials::Material, Ray, TraceObj};
 
+#[derive(Debug)]
 pub struct Triangle {
     pub a: Point3<f32>,
     pub b: Point3<f32>,

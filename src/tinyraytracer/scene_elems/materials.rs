@@ -1,13 +1,16 @@
+use std::fmt::Debug;
+
 use image::Rgba;
 use nalgebra::Point3;
 
-pub trait Material {
+pub trait Material: Debug {
     fn color(&self, intersection_pt: Point3<f32>) -> Rgba<u8>;
     fn albedo(&self) -> [f32; 4];
     fn spec_exponent(&self) -> f32;
     fn refr_ratio(&self) -> f32;
 }
 
+#[derive(Debug)]
 pub struct PlainMaterial {
     pub color: Rgba<u8>,
     pub albedo: [f32; 4],
@@ -30,6 +33,7 @@ impl Material for PlainMaterial {
     }
 }
 
+#[derive(Debug)]
 pub struct CheckerFloorMaterial {
     pub color0: Rgba<u8>,
     pub color1: Rgba<u8>,

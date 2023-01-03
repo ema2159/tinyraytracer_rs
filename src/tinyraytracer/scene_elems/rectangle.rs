@@ -4,6 +4,7 @@ use nalgebra::{Point3, Vector3};
 
 use super::{materials::Material, Ray, TraceObj};
 
+#[derive(Debug)]
 pub struct Rectangle {
     pub low_left: Point3<f32>,
     pub low_right: Point3<f32>,

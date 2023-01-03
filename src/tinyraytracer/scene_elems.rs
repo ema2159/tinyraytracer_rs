@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use nalgebra::{Point3, Vector3};
 
 pub struct Light {
@@ -15,7 +17,7 @@ pub struct Ray {
     pub direction: Vector3<f32>,
 }
 
-pub trait TraceObj {
+pub trait TraceObj: Debug {
     fn ray_intersect(&self, ray: &Ray) -> Option<f32>;
     fn get_normal(&self, intersection_point: Point3<f32>) -> Vector3<f32>;
     fn material(&self) -> &dyn Material;
