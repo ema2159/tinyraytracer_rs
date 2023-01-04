@@ -23,6 +23,9 @@ impl TraceObj for Plane {
         }
 
         let t = (self.normal.dot(&ray.origin.coords) + d) / n_dot_raydir;
+        if t < 0. {
+            return None;
+        }
 
         Some(t)
     }

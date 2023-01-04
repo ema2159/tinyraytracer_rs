@@ -27,6 +27,9 @@ impl TraceObj for Rectangle {
 
         // If it exists, calculate the intersection point
         let t = (normal.dot(&ray.origin.coords) + d) / n_dot_raydir;
+        if t < 0. {
+            return None;
+        }
         let intersection_point = ray.origin + t * ray.direction;
 
         // Then, check if the point is inside of the rectangle

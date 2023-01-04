@@ -27,6 +27,9 @@ impl TraceObj for Triangle {
 
         // If it exists, calculate the intersection point
         let t = (normal.dot(&ray.origin.coords) + d) / n_dot_raydir;
+        if t < 0. {
+            return None;
+        }
         let intersection_point = ray.origin + t * ray.direction;
 
         // Through barycentric coordinates, calculate if point is inside the triangle
