@@ -46,7 +46,7 @@ Add more spheres. Add basic materials support.
 **Branch:** [Step_3](https://github.com/ema2159/tinyraytracer_rs/tree/Step_3)
 
 **Preview:**
-![Step 3 image](./imgs/Step_4.png)
+![Step 3 image](./imgs/Step_3.png)
 
 ### Step 4: Diffuse lighting
 Add diffuse lighting to scene objects.
