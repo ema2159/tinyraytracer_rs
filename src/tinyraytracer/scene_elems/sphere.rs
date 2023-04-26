@@ -18,7 +18,7 @@ impl TraceObj for Sphere {
         // Length of the vector that goes from the ray origin to the vertical line that passes
         // through the sphere's center
         let proj_on_ray = orig_to_center.dot(&ray.direction);
-        // Squared distance betw-sqeen sphere center and casted ray
+        // Squared distance between sphere center and casted ray
         let sphere_center_to_ray_sq = orig_to_center.norm_squared() - proj_on_ray * proj_on_ray;
 
         // If line from sphere center to ray is longer than radius, there is no intersection point
