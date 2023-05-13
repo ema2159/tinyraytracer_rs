@@ -115,9 +115,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
     let plane = Rectangle {
         low_left: Point3::new(-10., -4., -10.),
-        low_right: Point3::new(10., -4., -10.),
-        up_left: Point3::new(-10., -4., -30.),
-        material: checkered_floor.clone(),
+        up_right: Point3::new(10., -4., -30.),
+        material: checkered_floor,
     };
 
     let mut objs: Vec<Box<dyn TraceObj>> = vec![

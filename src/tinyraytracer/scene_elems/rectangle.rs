@@ -7,9 +7,21 @@ use super::{materials::Material, Ray, TraceObj};
 #[derive(Debug)]
 pub struct Rectangle {
     pub low_left: Point3<f32>,
-    pub low_right: Point3<f32>,
-    pub up_left: Point3<f32>,
+    pub up_right: Point3<f32>,
     pub material: Rc<dyn Material>,
+}
+
+impl Rectangle {
+    fn get_width_height_vectors(&self) -> (Vector3<f32>, Vector3<f32>) {
+        let width_vec = Vector3::new(
+            self.up_right.x - self.low_left.x,
+            self.up_right.y - self.low_left.y,
+            0.0,
+        );
+        let height_vec = Vector3::new(0.0, 0.0, self.up_right.z - self.low_left.z);
+
+        (width_vec, height_vec)
+    }
 }
 
 impl TraceObj for Rectangle {
@@ -33,8 +45,7 @@ impl TraceObj for Rectangle {
         let intersection_point = ray.origin + t * ray.direction;
 
         // Then, check if the point is inside of the rectangle
-        let width_vec = self.low_right - self.low_left;
-        let height_vec = self.up_left - self.low_left;
+        let (width_vec, height_vec) = self.get_width_height_vectors();
         let height = height_vec.norm();
         let width = width_vec.norm();
         let height_dir = height_vec.normalize();
@@ -52,8 +63,7 @@ impl TraceObj for Rectangle {
     }
 
     fn get_normal(&self, _intersect_point: Point3<f32>) -> Vector3<f32> {
-        let width_vec = self.low_right - self.low_left;
-        let height_vec = self.up_left - self.low_left;
+        let (width_vec, height_vec) = self.get_width_height_vectors();
 
         width_vec.cross(&height_vec).normalize()
     }
