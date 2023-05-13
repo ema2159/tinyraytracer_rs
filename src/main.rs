@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let sphere0 = Sphere {
         center: Point3::new(-3., 0., -16.),
         radius: 2.,
-        material: ivory.clone(),
+        material: ivory,
     };
     let sphere1 = Sphere {
         center: Point3::new(-1., -1.5, -12.),
@@ -106,12 +106,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let sphere2 = Sphere {
         center: Point3::new(1.5, -0.5, -18.),
         radius: 3.,
-        material: red_rubber.clone(),
+        material: red_rubber,
     };
     let sphere3 = Sphere {
         center: Point3::new(7., 5., -18.),
         radius: 4.,
-        material: mirror.clone(),
+        material: mirror,
     };
     let plane = Rectangle {
         low_left: Point3::new(-10., -4., -10.),
